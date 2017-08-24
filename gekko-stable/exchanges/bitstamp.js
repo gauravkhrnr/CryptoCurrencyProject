@@ -2,6 +2,7 @@ var Bitstamp = require("bitstamp");
 var _ = require('lodash');
 var moment = require('moment');
 var log = require('../core/log');
+var util = require('../core/util');
 
 var Trader = function(config) {
   _.bindAll(this);
@@ -9,7 +10,9 @@ var Trader = function(config) {
     this.key = config.key;
     this.secret = config.secret;
     this.clientID = config.username;
-    this.market = (config.asset + config.currency).toLowerCase();
+    this.asset = config.asset.toLowerCase();
+    this.currency = config.currency.toLowerCase();
+    this.market = this.asset + this.currency;
   }
   this.name = 'Bitstamp';
 
@@ -40,10 +43,20 @@ Trader.prototype.retry = function(method, args) {
 }
 
 Trader.prototype.getPortfolio = function(callback) {
+  var args = _.toArray(arguments);
   var set = function(err, data) {
 
-    if(!_.isEmpty(data.error))
-      return callback('BITSTAMP API ERROR: ' + data.error);
+    if(data && data.error) {
+      err = data.error;
+    }
+
+    if(err) {
+      if(err.meta && err.meta.reason === 'API key not found')
+        util.die('Bitstamp says this API keys is invalid..');
+
+      log.error('BITSTAMP API ERROR:', err);
+      return this.retry(this.getPortfolio, args);
+    }
 
     var portfolio = [];
     _.each(data, function(amount, asset) {
@@ -74,16 +87,15 @@ Trader.prototype.getFee = function(callback) {
 }
 
 Trader.prototype.buy = function(amount, price, callback) {
+  var args = _.toArray(arguments);
   var set = function(err, result) {
-    if(err || result.status === "error")
-      return log.error('unable to buy:', err, result.reason);
-
+    if(err || result.status === "error") {
+      log.error('unable to buy:', err, result.reason, 'retrying...');
+      return this.retry(this.buy, args);
+    }
 
     callback(null, result.id);
   }.bind(this);
-
-  // TODO: fees are hardcoded here?
-  // prevent: Ensure that there are no more than 8 digits in total.
 
   //Decrease amount by 1% to avoid trying to buy more than balance allows.
   amount -= amount / 100;
@@ -102,12 +114,21 @@ Trader.prototype.buy = function(amount, price, callback) {
 }
 
 Trader.prototype.sell = function(amount, price, callback) {
+  var args = _.toArray(arguments);
   var set = function(err, result) {
-    if(err || result.status === "error")
-      return log.error('unable to sell:', err, result.reason);
+    if(err || result.status === "error") {
+      log.error('unable to sell:', err, result.reason, 'retrying...');
+      return this.retry(this.sell, args);
+    }
 
     callback(null, result.id);
   }.bind(this);
+
+  // prevent:
+  // 'Ensure that there are no more than 8 decimal places.'
+  amount *= 100000000;
+  amount = Math.floor(amount);
+  amount /= 100000000;
 
   // prevent:
   // 'Ensure that there are no more than 2 decimal places.'
@@ -116,6 +137,44 @@ Trader.prototype.sell = function(amount, price, callback) {
   price /= 100;
 
   this.bitstamp.sell(this.market, amount, price, undefined, set);
+}
+
+
+Trader.prototype.getOrder = function(id, callback) {
+  var args = _.toArray(arguments);
+  var get = function(err, data) {
+    if(!err && _.isEmpty(data) && _.isEmpty(data.result))
+      err = 'no data';
+
+    else if(!err && !_.isEmpty(data.error))
+      err = data.error;
+
+    if(err) {
+      log.error('Unable to get order', order, JSON.stringify(err));
+      return this.retry(this.getOrder, args);
+    }
+
+    var order = _.find(data, o => o.order_id === +id);
+
+    if(!order) {
+      // if the order was cancelled we are unable
+      // to retrieve it, assume that this is what
+      // is happening.
+      return callback(err, {
+        price: 0,
+        amount: 0,
+        date: moment(0)
+      });
+    }
+
+    var price = parseFloat( order[this.market] );
+    var amount = Math.abs(parseFloat( order[this.asset] ));
+    var date = moment( order.datetime );
+
+    callback(err, {price, amount, date});
+  }.bind(this);
+
+  this.bitstamp.user_transactions(this.market, {}, get);
 }
 
 Trader.prototype.checkOrder = function(order, callback) {
@@ -128,9 +187,14 @@ Trader.prototype.checkOrder = function(order, callback) {
 }
 
 Trader.prototype.cancelOrder = function(order, callback) {
+  var args = _.toArray(arguments);
   var cancel = function(err, result) {
-    if(err || !result)
+    if(err || !result) {
       log.error('unable to cancel order', order, '(', err, result, ')');
+      return this.retry(this.cancelOrder, args);
+    }
+
+    callback();
   }.bind(this);
 
   this.bitstamp.cancel_order(order, cancel);
@@ -154,10 +218,44 @@ Trader.prototype.getTrades = function(since, callback, descending) {
     callback(null, result.reverse());
   }.bind(this);
 
-  if(since)
-    this.bitstamp.transactions(this.market, {time: 'day'}, process);
-  else
-    this.bitstamp.transactions(this.market, process);
+  // NOTE: temporary disabled, see https://github.com/askmike/gekko/issues/794
+  // if(since)
+  //   this.bitstamp.transactions(this.market, {time: 'day'}, process);
+  // else
+  this.bitstamp.transactions(this.market, process);
+}
+
+Trader.getCapabilities = function () {
+  return {
+    name: 'Bitstamp',
+    slug: 'bitstamp',
+    currencies: ['USD', 'EUR', 'BTC'],
+    assets: ['BTC', 'EUR', 'LTC', 'ETH', 'XRP'],
+    maxTradesAge: 60,
+    maxHistoryFetch: null,
+    markets: [
+      { pair: ['USD', 'EUR'], minimalOrder: { amount: 5, unit: 'currency' } },
+
+      { pair: ['USD', 'BTC'], minimalOrder: { amount: 5, unit: 'currency' } },
+      { pair: ['EUR', 'BTC'], minimalOrder: { amount: 5, unit: 'currency' } },
+
+      { pair: ['USD', 'XRP'], minimalOrder: { amount: 5, unit: 'currency' } },
+      { pair: ['EUR', 'XRP'], minimalOrder: { amount: 5, unit: 'currency' } },
+      { pair: ['BTC', 'XRP'], minimalOrder: { amount: 5, unit: 'currency' } },
+
+      { pair: ['USD', 'LTC'], minimalOrder: { amount: 5, unit: 'currency' } },
+      { pair: ['EUR', 'LTC'], minimalOrder: { amount: 5, unit: 'currency' } },
+      { pair: ['BTC', 'LTC'], minimalOrder: { amount: 5, unit: 'currency' } },
+
+      { pair: ['USD', 'ETH'], minimalOrder: { amount: 5, unit: 'currency' } },
+      { pair: ['EUR', 'ETH'], minimalOrder: { amount: 5, unit: 'currency' } },
+      { pair: ['BTC', 'ETH'], minimalOrder: { amount: 5, unit: 'currency' } },
+    ],
+    requires: ['key', 'secret', 'username'],
+    fetchTimespan: 60,
+    tid: 'tid',
+    tradable: true
+  };
 }
 
 module.exports = Trader;

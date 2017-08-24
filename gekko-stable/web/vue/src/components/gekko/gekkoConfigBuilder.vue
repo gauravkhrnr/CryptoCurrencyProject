@@ -3,14 +3,14 @@
   .grd-row
     .grd-row-col-3-6.mx1
       h3 Market
-      market-picker.contain(v-on:market='updateMarketConfig')
+      market-picker.contain(v-on:market='updateMarketConfig', :only-tradable='isTradebot')
     .grd-row-col-3-6.mx1
       type-picker(v-on:type='updateType')
-  template(v-if='type === "paper trader"')
+  template(v-if='type !== "market watcher"')
     .hr
     strat-picker.contain.my2(v-on:stratConfig='updateStrat')
-    .hr
-    paper-trader(v-on:settings='updatePaperTrader')
+    .hr(v-if='type === "paper trader"')
+    paper-trader(v-on:settings='updatePaperTrader', v-if='type === "paper trader"')
 </template>
 
 <script>
@@ -27,7 +27,11 @@ export default {
   created: function() {
     get('configPart/candleWriter', (error, response) => {
       this.candleWriter = toml.parse(response.part);
-    })
+    });
+    get('configPart/performanceAnalyzer', (error, response) => {
+      this.performanceAnalyzer = toml.parse(response.part);
+      this.performanceAnalyzer.enabled = true;
+    });
   },
   data: () => {
     return {
@@ -36,7 +40,8 @@ export default {
       type: '',
       strat: {},
       paperTrader: {},
-      candleWriter: {}
+      candleWriter: {},
+      performanceAnalyzer: {}
     }
   },
   components: {
@@ -46,6 +51,9 @@ export default {
     paperTrader
   },
   computed: {
+    isTradebot: function() {
+      return this.type === 'tradebot';
+    },
     config: function() {
       let config = {};
       Object.assign(
@@ -54,8 +62,14 @@ export default {
         this.strat,
         { paperTrader: this.paperTrader },
         { candleWriter: this.candleWriter },
-        { type: this.type }
+        { type: this.type },
+        { performanceAnalyzer: this.performanceAnalyzer }
       );
+
+      if(this.isTradebot) {
+        delete config.paperTrader;
+        config.trader = { enabled: true }
+      }
 
       config.valid = this.validConfig(config);
 

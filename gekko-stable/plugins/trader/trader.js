@@ -11,7 +11,28 @@ var Trader = function(next) {
 
   this.manager = new Manager(_.extend(config.trader, config.watch));
   this.manager.init(next);
+
+  let sendPortfolio = false;
+
+  this.manager.on('trade', trade => {
+
+    if(!sendPortfolio && this.initialPortfolio) {
+      this.emit('portfolioUpdate', this.initialPortfolio);
+      sendPortfolio = true;
+    }
+
+    this.emit('trade', trade);
+  });
+
+  this.manager.once('portfolioUpdate', portfolioUpdate => {
+    this.initialPortfolio = portfolioUpdate;
+  })
 }
+
+// teach our trader events
+util.makeEventEmitter(Trader);
+
+Trader.prototype.processCandle = (candle, done) => done();
 
 Trader.prototype.processAdvice = function(advice) {
   if(advice.recommendation == 'long') {

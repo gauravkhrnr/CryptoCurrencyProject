@@ -6,8 +6,8 @@ var config = {};
 //                          GENERAL SETTINGS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-config.silent = true;
-config.debug = false;
+config.silent = false;
+config.debug = true;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //                       CONFIGURING TRADING ADVICE
@@ -19,10 +19,10 @@ config.tradingAdvisor = {
     version: '1.0.2'
   }
 }
+
 config.candleWriter = {
   enabled: false
 }
-
 config.adviceWriter = {
   enabled: false,
   muteSoft: true,
