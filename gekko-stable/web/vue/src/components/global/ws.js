@@ -27,11 +27,10 @@ export const connect = () => {
   socket = new ReconnectingWebSocket(wsPath);
 
   setTimeout(() => {
+
     // in case we cannot connect
-    if(!info.connected) {
-      initializeState();
+    if(!info.connected)
       bus.$emit('WS_STATUS_CHANGE', info);
-    }
   }, 500);
 
   socket.onopen = () => {

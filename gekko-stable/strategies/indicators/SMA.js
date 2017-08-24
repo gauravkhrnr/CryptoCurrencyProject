@@ -9,7 +9,7 @@ var Indicator = function(weight) {
 
 Indicator.prototype.update = function(price) {
   this.prices[this.age % this.weight] = price;
-  var sum = this.prices.reduce(function(a, b) { return a + b; }, 0);
+  sum = this.prices.reduce(function(a, b) { return a + b; }, 0);
   this.result = sum / this.prices.length;
   this.age++;
 }

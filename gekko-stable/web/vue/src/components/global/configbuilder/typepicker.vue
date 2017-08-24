@@ -7,6 +7,9 @@ div
       div.grd-row(v-for='(type, i) in types').m1
         input.grd-row-col-1-6(type='radio', :value='i', v-model='selectedTypeIndex')
         label.grd-row-col-5-6(:for='i') {{ type }}
+    
+
+    em (Live trading not supported for now)
 </template>
 
 <script>
@@ -17,7 +20,7 @@ export default {
   },
   data: () => {
     return {
-      types: ['paper trader', 'market watcher', 'tradebot'],
+      types: ['paper trader', 'market watcher'],
       selectedTypeIndex: 0,
     }
   },

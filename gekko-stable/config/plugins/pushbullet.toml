@@ -10,7 +10,7 @@ muteSoft = true
 email = "jon_snow@westeros.org"
 
 # your pushbullet API key
-key = "7BR35P7H-V2532POX-EVHJLDAS-3QI4AMX7"
+key = "xxx"
 
 # will make Gekko messages start with [GEKKO]
 tag = "[GEKKO]"

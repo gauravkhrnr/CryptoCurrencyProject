@@ -19,13 +19,11 @@ const pipelineRunner = promisify(require('../../core/workers/pipeline/parent'));
 module.exports = function *() {
   var mode = 'backtest';
 
-  var config = {};
-
-  var base = require('./baseConfig');
+  var config = require('./baseConfig');
 
   var req = this.request.body;
 
-  _.merge(config, base, req.gekkoConfig);
+  _.merge(config, req.gekkoConfig);
 
   var result = yield pipelineRunner(mode, config);
 

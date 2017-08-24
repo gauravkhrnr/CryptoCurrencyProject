@@ -1,7 +1,7 @@
 debug = true
 
 # what database should Gekko use?
-adapter = 'mongodb'
+adapter = 'sqlite'
 
 [watch]
 exchange = 'Poloniex'

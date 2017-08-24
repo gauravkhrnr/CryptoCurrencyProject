@@ -21,64 +21,46 @@ div
 <script>
 
 import _ from 'lodash'
+import markets from './markets'
 import rangePicker from './rangepicker.vue'
 import rangeCreator from './rangecreator.vue'
-import { get } from '../../../tools/ajax'
 
 export default {
-  props: ['onlyTradable', 'onlyImportable'],
+  props: ['has'],
   data: () => {
     return {
+      exchanges: markets,
+
       // defaults:
       exchange: 'poloniex',
       currency: 'USDT',
       asset: 'BTC',
     };
   },
+
   created: function() {
     this.emitConfig();
   },
   computed: {
-    exchanges: function() {
-
-      let exchanges = Object.assign({}, this.$store.state.exchanges);
-
-      if(_.isEmpty(exchanges))
-        return false;
-
-      if(this.onlyTradable) {
-        _.each(exchanges, (e, name) => {
-          if(!e.tradable)
-            delete exchanges[name];
-        });
-      }
-
-      if(this.onlyImportable) {
-        _.each(exchanges, (e, name) => {
-          if(!e.importable)
-            delete exchanges[name];
-        });
-      }
-
-      return exchanges;
-    },
     markets: function() {
-      return this.exchanges ? this.exchanges[ this.exchange ] : null;
+      return this.exchanges[ this.exchange ];
     },
 
     assets: function() {
-      return this.exchanges ? this.exchanges[this.exchange].markets[this.currency] : null;
+      return markets[this.exchange][this.currency];
     },
 
     currencies: function() {
-      return this.exchanges ? _.keys( this.exchanges[this.exchange].markets ) : null;
+      return _.keys( markets[this.exchange] );
     },
     watchConfig: function() {
       return {
         watch: {
           exchange: this.exchange,
           currency: this.currency,
+          currencies: this.currencies,
           asset: this.asset,
+          assets: this.assets,
         }
       }
     }
@@ -87,9 +69,7 @@ export default {
   watch: {
     currency: function() { this.emitConfig() },
     asset: function() { this.emitConfig() },
-    market: function() { this.emitConfig() },
-    exchanges: function() { this.emitConfig() },
-    exchange: function() { this.emitConfig() }
+    market: function() { this.emitConfig() }
   },
 
   methods: {

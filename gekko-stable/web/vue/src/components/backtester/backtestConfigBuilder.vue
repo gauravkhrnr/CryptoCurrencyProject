@@ -14,21 +14,13 @@ import datasetPicker from '../global/configbuilder/datasetpicker.vue'
 import stratPicker from '../global/configbuilder/stratpicker.vue'
 import paperTrader from '../global/configbuilder/papertrader.vue'
 import _ from 'lodash'
-import { get } from '../../tools/ajax'
 
 export default {
-  created: function() {
-    get('configPart/performanceAnalyzer', (error, response) => {
-      this.performanceAnalyzer = toml.parse(response.part);
-      this.performanceAnalyzer.enabled = true;
-    });
-  },
   data: () => {
     return {
       dataset: {},
       strat: {},
-      paperTrader: {},
-      performanceAnalyzer: {}
+      paperTrader: {}
     }
   },
   components: {
@@ -67,11 +59,8 @@ export default {
           backtest: {
             daterange: this.range
           }
-        },
-        { performanceAnalyzer: this.performanceAnalyzer }
+        }
       );
-
-      console.log(config);
 
       config.valid = this.validConfig(config);
 
@@ -110,6 +99,7 @@ export default {
     },
     updateDataset: function(set) {
       this.dataset = set;
+      // console.log('updateDataset', set);
       this.$emit('config', this.config);
     },
     updateStrat: function(sc) {

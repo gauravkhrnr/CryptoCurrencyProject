@@ -11,6 +11,16 @@ var subscriptions = [
   },
   {
     emitter: 'market',
+    event: 'small candle',
+    handler: 'processSmallCandle'
+  },
+  {
+    emitter: 'market',
+    event: 'trade',
+    handler: 'processTrade'
+  },
+  {
+    emitter: 'market',
     event: 'history',
     handler: 'processHistory'
   },
@@ -18,17 +28,7 @@ var subscriptions = [
     emitter: 'tradingAdvisor',
     event: 'advice',
     handler: 'processAdvice'
-  },
-  {
-    emitter: ['trader', 'paperTrader'],
-    event: 'trade',
-    handler: 'processTrade'
-  },
-  {
-    emitter: ['trader', 'paperTrader'],
-    event: 'portfolioUpdate',
-    handler: 'processPortfolioUpdate'
-  },
+  }
 ];
 
 module.exports = subscriptions;

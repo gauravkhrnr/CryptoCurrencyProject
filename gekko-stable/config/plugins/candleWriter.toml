@@ -1,2 +1,2 @@
 enabled = true
-adapter = "mongodb"
+adapter = "sqlite"

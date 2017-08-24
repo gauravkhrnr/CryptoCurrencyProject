@@ -9,7 +9,6 @@ const util = require('../util');
 const dirs = util.dirs();
 const config = util.getConfig();
 
-const exchangeChecker = require(dirs.core + 'exchangeChecker');
 const cp = require(dirs.core + 'cp');
 
 const adapter = config[config.adapter];
@@ -17,11 +16,15 @@ const Reader = require(dirs.gekko + adapter.path + '/reader');
 
 const TICKINTERVAL = 20 * 1000; // 20 seconds
 
-const slug = config.watch.exchange.toLowerCase();
-const exchange = exchangeChecker.getExchangeCapabilities(slug);
+const exchanges = require(dirs.gekko + 'exchanges');
+const exchange = _.find(exchanges, function(e) {
+  return e.slug === config.watch.exchange.toLowerCase();
+});
 
 if(!exchange)
-  util.die(`Unsupported exchange: ${slug}`)
+  util.die(`Unsupported exchange: ${config.watch.exchange.toLowerCase()}`)
+
+const exchangeChecker = require(util.dirs().core + 'exchangeChecker');
 
 const error = exchangeChecker.cantMonitor(config.watch);
 if(error)

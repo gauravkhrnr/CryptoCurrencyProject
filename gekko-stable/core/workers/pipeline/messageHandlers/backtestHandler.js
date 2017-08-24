@@ -23,7 +23,7 @@ module.exports = done => {
       else if(message.type === 'report')
         report = message.report;
 
-      else if(message.log)
+      else if(message.type === 'log')
         console.log(message.log);
     },
     exit: status => {

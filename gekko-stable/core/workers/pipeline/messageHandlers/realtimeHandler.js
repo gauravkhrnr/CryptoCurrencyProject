@@ -5,11 +5,13 @@ module.exports = cb => {
 
   return {
     message: message => {
-
       if(message.type === 'error') {
         cb(message.error);
         console.error(message.error);
       }
+
+      else if(message.type === 'log')
+        console.log(message.log);
 
       else
         cb(null, message);

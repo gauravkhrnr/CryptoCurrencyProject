@@ -3,7 +3,7 @@ enabled = false
 ## NOTE: once you filled in the following
 ## never share this file with anyone!
 
-key = "7BR35P7H-V2532POX-EVHJLDAS-3QI4AMX7"
-secret = "06da86c9f74ea325fa2faa90cdf7b82030f2154ff40c6d48d884eade97a55363390d0ccc542d4fc6795f03a1da930ce300039b09b35e80a5dee1ca360594e728"
+key = ""
+secret = ""
 # this is only required at specific exchanges
-username = "gauravkhrnr@gmail.com"
+username = ""

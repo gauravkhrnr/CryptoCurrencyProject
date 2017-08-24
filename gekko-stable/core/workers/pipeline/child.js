@@ -28,8 +28,11 @@ var start = (mode, config) => {
 
   var dirs = util.dirs();
 
-  // force correct gekko mode & config
+  // force correct gekko mode
   util.setGekkoMode(mode);
+
+  // force disable debug
+  config.debug = false;
   util.setConfig(config);
 
   var pipeline = require(dirs.core + 'pipeline');

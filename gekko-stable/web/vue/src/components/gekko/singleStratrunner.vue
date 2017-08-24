@@ -201,7 +201,7 @@ export default {
       post('getCandles', config, (err, res) => {
         this.candleFetch = 'fetched';
         // todo
-        if(!res || res.error || !_.isArray(res))
+        if(!res || res.error)
           console.log(res);
 
         this.candles = res.map(c => {

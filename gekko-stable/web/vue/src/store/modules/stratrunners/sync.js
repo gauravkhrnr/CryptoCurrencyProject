@@ -35,7 +35,7 @@ const sync = () => {
   bus.$on('startAt', update);
   bus.$on('lastCandle', update);
   bus.$on('firstCandle', update);
-  bus.$on('roundtrip', roundtrip);
+  bus.$on('roundtrip', update);
 }
 
 export default function() {
