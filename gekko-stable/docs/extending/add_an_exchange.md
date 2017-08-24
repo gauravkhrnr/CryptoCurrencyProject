@@ -1,6 +1,6 @@
 # Exchanges
 
-*This is a technical document about the requirements per exchange as implemented for Gekko in the `exchange` folder.*
+*This is a technical document about adding a new exchange to Gekko.*
 
 Gekko arranges all communication about when assets need to be bought or sold between the *strategy* and the *portfolio manager*. Exchanges are implemented by the portfolio manager, all differences between the different API's are abstracted away just below the portfolio manager. This document describes all requirements for adding a new exchange to Gekko.
 
@@ -10,7 +10,7 @@ When you add a new exchange to Gekko you need to expose an object that has metho
 
 It is advised to use a npm module to query an exchange. This will seperate the abstract API calls from the Gekko specific stuff (In the case of Bitstamp there was no module yet, so I [created one](https://www.npmjs.com/package/bitstamp)).
 
-Finally Gekko needs to know how it can interact with the exchange, add an object to the `exchanges` array in `gekko/exchanges.js`. The meaning of the properties are described in the top of that document.
+Finally Gekko needs to know how it can interact with the exchange, so add a static method `getCapabilities()` that returns it's properties. The meaning of the properties are described in the Capabilities section in this document.
 
 ## Portfolio manager's expectations
 
@@ -51,17 +51,23 @@ The callback needs to have the parameters of `err` and `portfolio`. Portfolio ne
 
 This should create a buy / sell order at the exchange for [amount] of [asset] at [price] per 1 asset. If you have set `direct` to `true` the price will be `false`. The callback needs to have the parameters `err` and `order`. The order needs to be something that can be fed back to the exchange to see wether the order has been filled or not.
 
+### getOrder
+
+    this.exchange.getOrder(order, callback);
+
+The order will be something that the manager previously received via the `sell` or `buy` methods. The callback should have the parameters `err` and `order`. Order is an object with properties `price`, `amount` and `date`. Price is the (volume weighted) average price of all trades necesarry to execute the order. Amount is the amount of currency traded and Date is a moment object of the last trade part of this order.
+
 ### checkOrder
 
     this.exchange.checkOrder(order, callback);
 
-The order will be something that the manager previously received via the `sell` or `buy` methods. The callback should have the parameters `err` and `filled`. Filled is a boolean that is true when the order is already filled and false when it is not. Currently only partially filled orders should be treated as not filled.
+The order will be something that the manager previously received via the `sell` or `buy` methods. The callback should have the parameters `err` and `filled`. Filled is a boolean that is true when the order is already filled and false when it is not. Currently partially filled orders should be treated as not filled.
 
 ### cancelOrder
 
-    this.exchange.cancelOrder(order);
+    this.exchange.cancelOrder(order, callback);
 
-The order will be something that the manager previously received via the `sell` or `buy` methods.
+The order will be something that the manager previously received via the `sell` or `buy` methods. The callback should have the parameterer `err`.
 
 ## Trading method's expectations
 
@@ -84,3 +90,45 @@ The callback expects an error and a `trades` object. Trades is an array of trade
 ### Recompiling Gekko UI
 
 Once you added your exchange you can use it with Gekko! However if you want the new exchange to show up in the web interface you need to recompile the frontend (so your updated `exchanges.js` file is used by the webapp). [Read here](https://gekko.wizb.it/docs/internals/gekko_ui.html#Developing-for-the-Gekko-UI-frontend) how to do that.
+
+## Capabilities
+
+Each exchange *must* provide a `getCapabilities()` static method that returns an object with these parameters:
+
+- `name`: Proper name of the exchange
+- `slug`: slug name of the exchange (needs to match filename in `gekko/exchanges/`)
+- `currencies`: all the currencies supported by the exchange implementation in gekko.
+- `assets`: all the assets supported by the exchange implementation in gekko.
+- `pairs`: all allowed currency / asset combinations that form a market
+- `maxHistoryFetch`: the parameter fed to the getTrades call to get the max history.
+- `providesHistory`: If the getTrades can be fed a since parameter that Gekko can use to get historical data, set this to:
+    - `date`: When Gekko can pass in a starting point in time to start returning data from.
+    - `tid`: When Gekko needs to pass in a trade id to act as a starting point in time.
+    - `false`: When the exchange does not support to give back historical data at all.
+- `fetchTimespan`: if the timespan between first and last trade per fetch is fixed, set it here in minutes.
+- `tradable`: if gekko supports automatic trading on this exchange.
+- `requires`: if gekko supports automatic trading, this is an array of required api credentials gekko needs to pass into the constructor.
+- `forceReorderDelay`: if after canceling an order a new one can't be created straight away since the balance is not updated fast enough, set this to true (only required for exchanges where Gekko can trade).
+
+Below is a real-case example how `bistamp` exchange provides its `getCapabilities()` method:
+
+```
+Trader.getCapabilities = function () {
+  return {
+    name: 'Bitstamp',
+    slug: 'bitstamp',
+    currencies: ['USD', 'EUR'],
+    assets: ['BTC', 'EUR'],
+    maxTradesAge: 60,
+    maxHistoryFetch: null,
+    markets: [
+      { pair: ['USD', 'BTC'], minimalOrder: { amount: 1, unit: 'currency' } },
+      { pair: ['EUR', 'BTC'], minimalOrder: { amount: 1, unit: 'currency' } },
+      { pair: ['USD', 'EUR'], minimalOrder: { amount: 1, unit: 'currency' } }
+    ],
+    requires: ['key', 'secret', 'username'],
+    fetchTimespan: 60,
+    tid: 'tid'
+  };
+}
+```

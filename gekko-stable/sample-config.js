@@ -1,5 +1,5 @@
 // Everything is explained here:
-// @link https://github.com/askmike/gekko/blob/stable/docs/advanced_usage/plugins.md
+// @link https://gekko.wizb.it/docs/commandline/plugins.html
 
 var config = {};
 
@@ -7,7 +7,7 @@ var config = {};
 //                          GENERAL SETTINGS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-config.debug = false; // for additional logging / debugging
+config.debug = true; // for additional logging / debugging
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //                         WATCHING A MARKET
@@ -15,7 +15,7 @@ config.debug = false; // for additional logging / debugging
 
 config.watch = {
 
-  // see https://github.com/askmike/gekko#supported-exchanges
+  // see https://gekko.wizb.it/docs/introduction/supported_exchanges.html
   exchange: 'poloniex',
   currency: 'USDT',
   asset: 'BTC',
@@ -200,10 +200,15 @@ config.paperTrader = {
     currency: 100,
   },
   // how much fee in % does each trade cost?
-  fee: 0.25,
+  feeMaker: 0.15,
+  feeTaker: 0.25,
+  feeUsing: 'maker',
   // how much slippage/spread should Gekko assume per trade?
   slippage: 0.05,
-  // what is the risk free return in % (to calculate sharpe ratio)
+}
+
+config.performanceAnalyzer = {
+  enabled: true,
   riskFreeReturn: 5
 }
 
@@ -212,9 +217,10 @@ config.paperTrader = {
 // watched by `config.watch`.
 config.trader = {
   enabled: false,
-  key: '',
-  secret: '',
-  username: '' // your username, only required for specific exchanges.
+  key: '7BR35P7H-V2532POX-EVHJLDAS-3QI4AMX7',
+  secret: '06da86c9f74ea325fa2faa90cdf7b82030f2154ff40c6d48d884eade97a55363390d0ccc542d4fc6795f03a1da930ce300039b09b35e80a5dee1ca360594e728',
+  username: 'gauravkhrnr@gmail.com', // your username, only required for specific exchanges.
+  passphrase: '' // GDAX, requires a passphrase.
 }
 
 config.adviceLogger = {
@@ -227,7 +233,7 @@ config.pushover = {
   sendPushoverOnStart: false,
   muteSoft: true, // disable advice printout if it's soft
   tag: '[GEKKO]',
-  key: '',
+  key: '7BR35P7H-V2532POX-EVHJLDAS-3QI4AMX7',
   user: ''
 }
 
@@ -298,6 +304,24 @@ config.telegrambot = {
   botName: 'gekkobot'
 }
 
+config.twitter = {
+    // sends pushbullets if true
+  enabled: false,
+    // Send 'Gekko starting' message if true
+  sendMessageOnStart: false,
+    // disable advice printout if it's soft
+  muteSoft: false,
+  tag: '[GEKKO]',
+    // twitter consumer key
+  consumer_key: '',
+    // twitter consumer secret
+  consumer_secret: '',
+    // twitter access token key
+  access_token_key: '',
+    // twitter access token secret
+  access_token_secret: ''
+};
+
 config.xmppbot = {
   enabled: false,
   emitUpdates: false,
@@ -333,6 +357,14 @@ config.redisBeacon = {
   ]
 }
 
+config.slack = {
+  enabled: false,
+  token: '',
+  sendMessageOnStart: true,
+  muteSoft: true,
+  channel: '' // #tradebot
+}
+
 config.candleWriter = {
   enabled: false
 }
@@ -354,10 +386,7 @@ config.sqlite = {
   dataDirectory: 'history',
   version: 0.1,
 
-  dependencies: [{
-    module: 'sqlite3',
-    version: '3.1.4'
-  }]
+  dependencies: []
 }
 
   // Postgres adapter example config (please note: requires postgres >= 9.5):

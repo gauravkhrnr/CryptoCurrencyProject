@@ -14,6 +14,7 @@
 .DS_Store
 Thumbs.db
 config.js
+api-keys.js
 .cache
 .project
 .settings
@@ -34,7 +35,7 @@ dwsync.xml
 *.esproj
 *.espressostorage
 
-# Folders to ignore
+# Folders & files to ignore
 
 node_modules
 candles.csv
@@ -43,3 +44,4 @@ history
 TMP_*
 .idea
 volumes
+SECRET-api-keys.json

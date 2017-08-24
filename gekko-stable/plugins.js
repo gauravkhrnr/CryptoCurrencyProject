@@ -49,7 +49,7 @@ var plugins = [
     modes: ['realtime'],
     dependencies: [{
       module: 'irc',
-      version: '0.3.6'
+      version: '0.5.2'
     }]
   },
   {
@@ -112,14 +112,6 @@ var plugins = [
     }]
   },
   {
-    name: 'Trader',
-    description: 'Follows the advice and create real orders.',
-    slug: 'trader',
-    async: true,
-    modes: ['realtime'],
-    path: config => 'trader/trader.js',
-  },
-  {
     name: 'Advice logger',
     description: '',
     slug: 'adviceLogger',
@@ -128,12 +120,30 @@ var plugins = [
     modes: ['realtime']
   },
   {
+    name: 'Trader',
+    description: 'Follows the advice and create real orders.',
+    slug: 'trader',
+    async: true,
+    modes: ['realtime'],
+    emits: ['portfolioUpdate', 'trade'],
+    path: config => 'trader/trader.js',
+  },
+  {
     name: 'Paper Trader',
     description: 'Paper trader that simulates fake trades.',
     slug: 'paperTrader',
     async: false,
     modes: ['realtime', 'backtest'],
+    emits: ['portfolioUpdate', 'trade'],
     path: config => 'paperTrader/paperTrader.js',
+  },
+  {
+    name: 'Performance Analyzer',
+    description: 'Analyzes performances of trades',
+    slug: 'performanceAnalyzer',
+    async: false,
+    modes: ['realtime', 'backtest'],
+    path: config => 'performanceAnalyzer/performanceAnalyzer.js',
   },
   {
     name: 'Redis beacon',
@@ -150,6 +160,20 @@ var plugins = [
     name: 'Pushbullet',
     description: 'Sends advice to pushbullet.',
     slug: 'pushbullet',
+    async: false,
+    modes: ['realtime']
+  },
+  {
+    name: 'Twitter',
+    description: 'Sends trades to twitter.',
+    slug: 'twitter',
+    async: false,
+    modes: ['realtime']
+  },
+  {
+    name: 'Slack',
+    description: 'Sends trades to slack channel.',
+    slug: 'slack',
     async: false,
     modes: ['realtime']
   },
